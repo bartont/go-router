@@ -5,13 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	//"io/ioutil"
-	"log"
 	"net/http"
 )
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	url := authRootUrl
 	if url == "" {
 		url = authRootUrlDev + "/token"
@@ -23,8 +20,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&dat)
 
 	if dat["password"] == nil || dat["email"] == nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "missing email or password")
+		invalid_request(w, nil, "missing email or password")
 		return
 	}
 
@@ -37,9 +33,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	req, err := http.NewRequest("POST", url, b)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, err.Error())
-		log.Println("Unable to send request", err)
+		invalid_request(w, err, "Unable to send request")
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -47,18 +41,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, err.Error())
-		log.Println("Unable to login", err)
-
+		access_denied(w, err, "Unable to login")
 	} else {
-		w.WriteHeader(http.StatusCreated)
-
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
 		s := buf.String()
-
-		fmt.Fprintf(w, s)
+		created_request(w, s)
 	}
 
 }

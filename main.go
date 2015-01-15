@@ -27,6 +27,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", rootHandler)
 	r.HandleFunc("/login", loginHandler)
+	r.HandleFunc("/registration", registrationHandler)
 	r.HandleFunc("/testo", testoHandler)
 	http.Handle("/", validate(r))
 
